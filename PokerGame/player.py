@@ -212,12 +212,12 @@ class Combination:
     # function, which find player with max combination. Returns list of
     # players with maximal combination
     @staticmethod
-    def find_max(table):
-        max_combo_player = max(table.players, key=lambda x: x.combination)
+    def find_max(players):
+        max_combo_player = max(players, key=lambda x: x.combination)
 
         result = [max_combo_player]
 
-        for player in table.players:
+        for player in players:
             if player.combination == max_combo_player.combination and player != max_combo_player:
                 result.append(player)
 
@@ -313,6 +313,7 @@ class Player:
         self.__cards = []
         self.answer = self._Answer()
         self.combination = None
+        self.__bet = 0
 
     # string represents
     def __repr__(self):
@@ -322,6 +323,14 @@ class Player:
         return f"Player {self.__name}"
 
     # properties
+    @property
+    def bet(self):
+        return self.__bet
+
+    @bet.setter
+    def bet(self, value):
+        self.__bet = value
+
     @property
     def stack(self):
         return self.__stack
@@ -375,12 +384,14 @@ class Player:
                 table.bank[table.players.index(self)][0] += self.stack            
                 self.answer.raised = True
                 self.answer.asked = True
+                self.bet += self.stack
                 self.stack = 0
                 table.bank[table.players.index(self)][1] = True
             else:
                 table.bank[table.players.index(self)][0] += difference
                 self.answer.raised = True
                 self.answer.asked = True
+                self.bet += difference
                 self.stack -= difference
 
 
@@ -396,12 +407,14 @@ class Player:
             table.bank[table.players.index(self)][0] += self.stack            
             self.answer.raised = True
             self.answer.asked = True
+            self.bet += self.stack
             self.stack = 0
             table.bank[table.players.index(self)][1] = True
         elif 0 < value <= self.stack:
             table.bank[table.players.index(self)][0] += value
             self.answer.raised = True
             self.answer.asked = True
+            self.bet += value
             self.stack -= value
             
             # player go all-in

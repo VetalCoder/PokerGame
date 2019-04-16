@@ -247,20 +247,66 @@ class Table:
 
 
     # check winner
-    def __check_winner(self):      
-        for player in self.players:
-            player.find_combination(self.table_cards + player.cards)
+    #def __check_winner(self):      
+    #    for player in self.players:
+    #        player.find_combination(self.table_cards + player.cards)
 
-        return Combination.find_max(self)
+    #    return Combination.find_max(self)
 
-    def __pay_winners(self, winners):
-        # TODO: self.bank must be added to winner.stack
-        pass
+    #def __pay_winners(self, winners):
+    #    # TODO: self.bank must be added to winner.stack
+    #    pass
         
     def show_winner(self):
-        winners_list = self.__check_winner()
-        # \\\\ pay winners ////
+        # find winners and pay them
 
+        winners_list = []
+
+        bank_sum = 0
+        for bank in self.bank.values():
+            bank_sum += bank[0]
+
+        #players_alive = {index : player for index, player in enumerate(self.players) if player.answer.passed != True}
+        players_alive = [player for player in self.players if player.answer.passed != True]
+        # find maximum value betting
+        # max_bet = self.bank[max(players_alive, key=lambda x: self.bank[x][0])][0]
+
+        
+        # calculate combinations
+        for player in players_alive:
+            player.find_combination(self.table_cards + player.cards)
+
+        # pay players
+        while bank_sum > 0:
+            winners = Combination.find_max(players_alive)
+            winners.sort(key=lambda x: x.bet)
+
+            while winners:
+                #form subbank and delete from bank and player.bet
+                win_bet = winners[0].bet
+                subbank = 0
+                for player in self.players:
+                    player_bet = player.bet
+                    if player_bet > win_bet:
+                        player.bet -= win_bet
+                        self.bank[self.players.index(player)][0] -= win_bet
+                        subbank += win_bet
+                    else:
+                        player.bet = 0
+                        self.bank[self.players.index(player)][0] = 0
+                        subbank += player_bet
+
+                # paid
+                for winner in winners:
+                    winner.stack += subbank // len(winners)
+
+                winners_list.append(winners[0])
+                del winners[0]
+                
+            # re-calculate bank-sum
+            bank_sum = 0
+            for bank in self.bank.values():
+                bank_sum += bank[0]
 
         # print info...
         clear_scr()
@@ -279,10 +325,9 @@ class Table:
 
         for player in self.players:
             print(f"{player.name} cards:  {player.cards[0].short_name}  {player.cards[1].short_name}") 
-        print()
-
-        for player in self.players:
-            print(f"{player.name} have {player.combination}")
+            print(f"{player.name} have {player.stack} funds.")
+            print(f"{player.name} answer is {player.answer}.")
+            print()
 
         print()
 
