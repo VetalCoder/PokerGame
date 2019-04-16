@@ -129,7 +129,7 @@ class Table:
         # first cycle (ask all players)
         # return if one player must be asked
         for player in self.players:
-            if len([player for player in self.players if player.answer.passed != True and self.bank[self.players.index(player)][1] != True]) == 1:
+            if len([player for player in self.players if player.answer.passed != True and self.bank[self.players.index(player)][1] != True]) == 0:
                 return
 
             if player.answer.passed:
@@ -162,7 +162,7 @@ class Table:
         # second cycle (ask players to call if len(set(bank_sum)) != 1) 
         stack_list = [bank[0] for index, bank in self.bank.items() if bank[1] == False and self.players[index].answer.passed != True]
         
-        while len(set(stack_list)) != 1 :
+        while len(set(stack_list)) not in (0, 1):
             for player in self.players:
                 # skip asking players with max bet, or passed, or who go all-in
                 if player.answer.passed or \
@@ -279,6 +279,12 @@ class Table:
         # pay players
         while bank_sum > 0:
             winners = Combination.find_max(players_alive)
+            
+            # deleting and sorting winners
+            for index in range(len(winners)):
+                if winners[index].bet == 0:
+                    del winners[index]
+
             winners.sort(key=lambda x: x.bet)
 
             while winners:
@@ -301,7 +307,9 @@ class Table:
                     winner.stack += subbank // len(winners)
 
                 winners_list.append(winners[0])
+                del players_alive[players_alive.index(winners[0])]
                 del winners[0]
+                
                 
             # re-calculate bank-sum
             bank_sum = 0
