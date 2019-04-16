@@ -29,7 +29,7 @@ def print_game(matrix):
 
 
 def init_game():
-    table = Table(Player("Vasya", 1500), Player("Petya", 1200), Player("Dusia", 2000))
+    table = Table(50, Player("Vasya", 1500), Player("Petya", 1200), Player("Dusia", 2000))
                   #Player("Anya", 1500), Player("Vova", 1500), Player("Pupsik", 1500),
                   #Player("Serhio", 1500), Player("Pedro", 1500), Player("Margo", 1500))
 

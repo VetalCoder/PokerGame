@@ -246,9 +246,29 @@ class Player:
             self.__pass = False
             self.__check = False
             self.__call = False
-            self.__raise = False   
+            self.__raise = False 
+            self.__smallblind = False
+            self.__bigblind = False
             self.__asked = False   # value for controls. True if player has been asked minimum once
 
+        @property
+        def smallblind(self):
+            return self.__smallblind
+
+        @smallblind.setter
+        def smallblind(self, value):
+            if type(value) == bool:
+                self.__smallblind = value
+
+        @property
+        def bigblind(self):
+            return self.__bigblind
+
+        @bigblind.setter
+        def bigblind(self, value):
+            if type(value) == bool:
+                self.__bigblind = value
+            
         @property
         def called(self):
             return self.__call
@@ -309,7 +329,11 @@ class Player:
             if self.__call:
                 return "called"
             if self.__check:
-                return "checked"            
+                return "checked"  
+            if self.__smallblind:
+                return "small blind" 
+            if self.__bigblind:
+                return "big blind" 
             if not self.__asked:
                 return "..."
 
@@ -318,6 +342,8 @@ class Player:
             self.__check = False
             self.__raise = False
             self.__call = False
+            self.__smallblind = False
+            self.__bigblind = False
             self.__asked = False   # value for controls. True if player has been asked minimum once
 
 
@@ -416,7 +442,7 @@ class Player:
         #table.bank[table.players.index(self)][0] = self.answer
 
 
-    def do_raise(self, table, value=0, all_in=False):
+    def do_raise(self, table, value=0, all_in=False, sb=False, bb=False):
         if all_in:
             table.bank[table.players.index(self)][0] += self.stack            
             self.answer.raised = True
@@ -426,7 +452,13 @@ class Player:
             table.bank[table.players.index(self)][1] = True
         elif 0 < value <= self.stack:
             table.bank[table.players.index(self)][0] += value
-            self.answer.raised = True
+
+            if sb:
+                self.answer.smallblind = True
+            elif bb:
+                self.answer.bigblind = True
+            else:
+                self.answer.raised = True
             self.answer.asked = True
             self.bet += value
             self.stack -= value

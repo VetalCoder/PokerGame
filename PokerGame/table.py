@@ -47,10 +47,12 @@ class Table:
        - current bank
     """
 
-    def __init__(self, *players):
+    def __init__(self, smallblind, *players):
         self.players = list(players)        
         self.table_cards = []        
         self.deck = Deck()
+        self.current_smallblind_player = 0 # index player
+        self.smallblind = smallblind
 
         # 1-answer, 2-player stack, 3-all-in?
         self.bank = {index : [0, False] for index in range(len(self.players))}             
@@ -88,6 +90,17 @@ class Table:
         # players cards
         for player in self.players:
             player.cards = [self.deck.pop(), self.deck.pop()]
+
+        # blinds
+        self.players[self.current_smallblind_player].do_raise(self, self.smallblind, sb=True)
+
+        if self.current_smallblind_player + 1 == len(self.players):
+            self.current_smallblind_player = 0
+        else:
+            self.current_smallblind_player += 1
+        
+        self.players[self.current_smallblind_player].do_raise(self, self.smallblind * 2, bb=True)
+
 
     def flop(self):
         # table cards
