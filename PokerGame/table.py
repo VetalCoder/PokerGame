@@ -127,8 +127,11 @@ class Table:
 
     def ask_players(self, round):
         # first cycle (ask all players)
-
+        # return if one player must be asked
         for player in self.players:
+            if len([player for player in self.players if player.answer.passed != True and self.bank[self.players.index(player)][1] != True]) == 1:
+                return
+
             if player.answer.passed:
                 continue
 
@@ -156,8 +159,8 @@ class Table:
                 else:
                     correct_answer = True
         
-        # second cycle (ask players to call if len(set(bank_sum)) != 1)
-        stack_list = [bank[0] for bank in self.bank.values() if bank[1] == False]
+        # second cycle (ask players to call if len(set(bank_sum)) != 1) 
+        stack_list = [bank[0] for index, bank in self.bank.items() if bank[1] == False and self.players[index].answer.passed != True]
         
         while len(set(stack_list)) != 1 :
             for player in self.players:
@@ -190,7 +193,7 @@ class Table:
                     else:
                         correct_answer = True
 
-            stack_list = [bank[0] for bank in self.bank.values()]
+            stack_list = [bank[0] for index, bank in self.bank.items() if bank[1] == False and self.players[index].answer.passed != True]
 
         # reset answers for next row
         for player in self.players:
