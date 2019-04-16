@@ -245,8 +245,18 @@ class Player:
         def __init__(self):
             self.__pass = False
             self.__check = False
+            self.__call = False
             self.__raise = False   
             self.__asked = False   # value for controls. True if player has been asked minimum once
+
+        @property
+        def called(self):
+            return self.__call
+
+        @called.setter
+        def called(self, value):
+            if type(value) == bool:
+                self.__call = value
 
         @property
         def passed(self):
@@ -288,22 +298,26 @@ class Player:
             return self.__pass == value.__pass and \
                 self.__check == value.__check and \
                 self.__raise == value.__raise and \
-                self.__asked == value.__asked 
+                self.__asked == value.__asked and \
+                self.__call == value.__call
 
         def __str__(self):
             if self.__pass:
                 return "passed"
-            if self.__check:
-                return "checked"
             if self.__raise:
                 return "raised"
+            if self.__call:
+                return "called"
+            if self.__check:
+                return "checked"            
             if not self.__asked:
-                return "not asked"
+                return "..."
 
         # if passed -- do not touch later
         def reset(self):
             self.__check = False
-            self.__raise = False   # can be integer, means value betting
+            self.__raise = False
+            self.__call = False
             self.__asked = False   # value for controls. True if player has been asked minimum once
 
 
@@ -382,14 +396,14 @@ class Player:
             
             if difference > self.stack:
                 table.bank[table.players.index(self)][0] += self.stack            
-                self.answer.raised = True
+                self.answer.called = True
                 self.answer.asked = True
                 self.bet += self.stack
                 self.stack = 0
                 table.bank[table.players.index(self)][1] = True
             else:
                 table.bank[table.players.index(self)][0] += difference
-                self.answer.raised = True
+                self.answer.called = True
                 self.answer.asked = True
                 self.bet += difference
                 self.stack -= difference
