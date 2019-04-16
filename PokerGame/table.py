@@ -1,0 +1,291 @@
+"""
+    Module, that defines table object
+"""
+from deck import Deck
+from player import IncorrectInputException, Combination
+
+# function, that can return only one char from keyboard 
+def get_char():
+    # figure out which function to use once, and store it in _func
+    if "_func" not in get_char.__dict__:
+        try:
+            # for Windows-based systems
+            import msvcrt # If successful, we are on Windows
+            get_char._func=msvcrt.getch
+
+        except ImportError:
+            # for POSIX-based systems (with termios & tty support)
+            import tty, sys, termios # raises ImportError if unsupported
+
+            def _ttyRead():
+                fd = sys.stdin.fileno()
+                oldSettings = termios.tcgetattr(fd)
+
+                try:
+                    tty.setcbreak(fd)
+                    answer = sys.stdin.read(1)
+                finally:
+                    termios.tcsetattr(fd, termios.TCSADRAIN, oldSettings)
+
+                return answer
+
+            get_char._func=_ttyRead
+
+    return get_char._func()
+
+# function, that clear terminal
+def clear_scr():
+    import os
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+class Table:
+    """
+       Class, that initiate working with table.
+       Has attributes:
+       - [] : current players
+       - [] : table cards
+       - current bank
+    """
+
+    def __init__(self, *players):
+        self.players = list(players)        
+        self.table_cards = []        
+        self.deck = Deck()
+
+        # 1-answer, 2-player stack, 3-all-in?
+        self.bank = {index : [0, False] for index in range(len(self.players))}             
+        
+
+        #self.answers = [player.answer for player in self.players]  # some fucks...   {player : player.answer for player in self.players}
+
+    ## True if player must be asked, False - if not.
+    #def check_answer(self, player):
+    #    if player.answer.passed:
+    #        return False
+        
+    #    if not player.answer.asked:
+    #        return True
+
+    #    raising_values = [value.raised for value in self.answers.values()]
+
+    #    # if all elements are equal -- len(set(...)) == 1
+    #    if len(set(raising_values)) == 1:
+    #        return False
+        
+    #    if max(raising_values) == player.answer.raised:
+    #        return False
+    #    else:
+    #        return True
+
+    ## true -- if all players get answer
+    #def check_all_answers(self):
+    #    for player in self.answers:
+    #        if self.check_answer(player):
+    #            return False
+    #    return True
+
+    def pre_flop(self):
+        # players cards
+        for player in self.players:
+            player.cards = [self.deck.pop(), self.deck.pop()]
+
+    def flop(self):
+        # table cards
+        for _ in range(3):
+            self.table_cards.append(self.deck.pop()) 
+
+    def turn(self):
+        # table cards
+        self.table_cards.append(self.deck.pop())
+
+    def river(self):
+        # table cards
+        self.table_cards.append(self.deck.pop())
+
+
+    def print_info(self, round):
+        clear_scr()
+
+        print(f"           {round.upper()}")
+        print("  Table cards:  ")
+        for card in self.table_cards:
+            print(f"        {card.short_name}", end="")
+        print()
+        
+        bank_sum = 0
+        # find bank value
+        for bank in self.bank.values():
+            bank_sum += bank[0]
+        print(f"  Table bank:    {bank_sum}")
+        print()
+
+        print("  Players answers:  ")
+        for ans in self.players:
+            print(f"    {ans.name} -- {ans.answer}")
+        print()
+
+
+    def ask_players(self, round):
+        # first cycle (ask all players)
+
+        for player in self.players:
+            if player.answer.passed:
+                continue
+
+            self.print_info(round)
+            
+            ready = False
+            while not ready:
+                print(f"{player.name}, press 'Enter' to continue....")
+                ready = True if get_char() == b"\r" else False
+
+            # output private information
+            print("  Your cards:  ")
+            for card in player.cards:
+                print(f"        {card.short_name}", end="")
+            print()
+            print(f"  Your stack:    {player.stack}")
+            
+            correct_answer = False
+            while not correct_answer:
+                try:
+                    player.ask(self)
+                except IncorrectInputException as error:
+                    print(error)
+                    print("Try again!")
+                else:
+                    correct_answer = True
+        
+        # second cycle (ask players to call if len(set(bank_sum)) != 1)
+        stack_list = [bank[0] for bank in self.bank.values() if bank[1] == False]
+        
+        while len(set(stack_list)) != 1 :
+            for player in self.players:
+                # skip asking players with max bet, or passed, or who go all-in
+                if player.answer.passed or \
+                    self.bank[self.players.index(player)][0] == max(stack_list) or \
+                    self.bank[self.players.index(player)][1]:
+                    continue
+
+                self.print_info(round)
+            
+                ready = False
+                while not ready:
+                    print(f"{player.name}, press 'Enter' to continue....")
+                    ready = True if get_char() == b"\r" else False
+
+                # output private information
+                print("  Your cards:  ")
+                for card in player.cards:
+                    print(f"        {card.short_name}", end="")
+                print()
+                print(f"  Your stack:    {player.stack}")
+                correct_answer = False
+                while not correct_answer:
+                    try:
+                        player.ask(self)
+                    except IncorrectInputException as error:
+                        print(error)
+                        print("Try again!")
+                    else:
+                        correct_answer = True
+
+            stack_list = [bank[0] for bank in self.bank.values()]
+
+        # reset answers for next row
+        for player in self.players:
+            player.answer.reset()
+
+
+    #def ask_players(self, round):
+    #    while not self.check_all_answers():
+    #        for player in self.players:
+    #            if not self.check_answer(player):
+    #                continue
+                
+    #            clear_scr()
+
+    #            #print info
+    #            print(f"           {round.upper()}")
+    #            print("  Table cards:  ")
+    #            for card in self.table_cards:
+    #                print(f"        {card.short_name}", end="")
+    #            print()
+    #            print(f"  Table bank:    {self.bank}")
+    #            print()
+    #            print("  Players answers:  ")
+    #            for ans in self.players:
+    #                print(f"    {ans.name} -- {ans.answer}")
+    #            print()
+            
+    #            ready = False
+    #            while not ready:
+    #                print(f"{player.name}, press 'Enter' to continue....")
+    #                ready = True if get_char() == b"\r" else False
+
+    #            print("  Your cards:  ")
+    #            for card in player.cards:
+    #                print(f"        {card.short_name}", end="")
+    #            print()
+    #            print(f"  Your stack:    {player.stack}")
+    #            correct_answer = False
+    #            while not correct_answer:
+    #                try:
+    #                    player.ask(self)
+    #                except IncorrectInputException as error:
+    #                    print(error)
+    #                    print("Try again!")
+    #                else:
+    #                    correct_answer = True
+    #    else:
+    #        for player in self.players:
+    #            player.answer.reset()
+    #        self.answers = {player : player.answer for player in self.players}
+
+
+    # check winner
+    def __check_winner(self):      
+        for player in self.players:
+            player.find_combination(self.table_cards + player.cards)
+
+        return Combination.find_max(self)
+
+    def __pay_winners(self, winners):
+        # TODO: self.bank must be added to winner.stack
+        pass
+        
+    def show_winner(self):
+        winners_list = self.__check_winner()
+        # \\\\ pay winners ////
+
+
+        # print info...
+        clear_scr()
+
+        print("  Table cards:  ")
+        for card in self.table_cards:
+            print(f"        {card.short_name}", end="")
+        print()
+        
+        bank_sum = 0
+        # find bank value
+        for bank in self.bank.values():
+            bank_sum += bank[0]
+        print(f"  Table bank:    {bank_sum}")
+        print()
+
+        for player in self.players:
+            print(f"{player.name} cards:  {player.cards[0].short_name}  {player.cards[1].short_name}") 
+        print()
+
+        for player in self.players:
+            print(f"{player.name} have {player.combination}")
+
+        print()
+
+        if len(winners_list) == 1:
+            print(f'Player {winners_list[0].name} win with {winners_list[0].combination}')
+        else:
+            print("  Winners:  ")
+            for index, winner in enumerate(winners_list, 1):
+                print(f'{index}. Player {winner.name} win with {winner.combination}')
