@@ -92,6 +92,8 @@ class Table:
             player.cards = [self.deck.pop(), self.deck.pop()]
 
         # blinds
+        if self.current_smallblind_player >= len(self.players):
+            self.current_smallblind_player = 0
         self.players[self.current_smallblind_player].do_raise(self, self.smallblind, sb=True)
 
         if self.current_smallblind_player + 1 == len(self.players):
@@ -361,10 +363,12 @@ class Table:
 
         # kick players with zero stack
         for index, player in enumerate(self.players):
-            if player.stack == 0:
+            if player.stack <= 0:
                 del self.players[index]
+                # bank must be refreshed after changing count of players
+                self.bank = {index : [0, False] for index in range(len(self.players))} 
                 print()
-                print(f"Player {player.name} has been removed from table... His stask is zero!")
+                print(f"Player {player.name} has been removed from table... His stack is zero!")
 
 
         input("Press enter to continue.....")
