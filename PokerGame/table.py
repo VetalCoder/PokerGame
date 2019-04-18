@@ -133,8 +133,8 @@ class Table:
         print()
 
         print("  Players answers:  ")
-        for ans in self.players:
-            print(f"    {ans.name} -- {ans.answer}")
+        for player in self.players:
+            print(f"    {player.name} (bet:{player.bet})\t-- {player.answer}")
         print()
 
 
@@ -358,3 +358,22 @@ class Table:
             print("  Winners:  ")
             for index, winner in enumerate(winners_list, 1):
                 print(f'{index}. Player {winner.name} win with {winner.combination}')
+
+        # kick players with zero stack
+        for index, player in enumerate(self.players):
+            if player.stack == 0:
+                del self.players[index]
+                print()
+                print(f"Player {player.name} has been removed from table... His stask is zero!")
+
+
+        input("Press enter to continue.....")
+
+    def reset_table(self):
+        self.table_cards = []
+        self.deck = Deck()
+
+        for player in self.players:
+            player.answer.reset()
+            player.answer.passed = False
+            player.combination = None
