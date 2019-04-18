@@ -4,6 +4,12 @@
 from deck import Deck
 from player import IncorrectInputException, Combination
 
+# Exception, which raised if one player are sitting on the table
+class OnePlayerException(Exception):
+    def __init__(self, player, message=""):
+        super().__init__(message)
+        self.player = player
+
 # function, that can return only one char from keyboard 
 def get_char():
     # figure out which function to use once, and store it in _func
@@ -87,6 +93,10 @@ class Table:
     #    return True
 
     def pre_flop(self):
+        # check len players
+        if len(self.players) == 1:
+            raise OnePlayerException(player=self.players[0])
+
         # players cards
         for player in self.players:
             player.cards = [self.deck.pop(), self.deck.pop()]

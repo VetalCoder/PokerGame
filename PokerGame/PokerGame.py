@@ -2,7 +2,7 @@
     Module, that starts game...
 """
 
-from table import Table
+from table import Table, OnePlayerException
 from player import Player
 
 
@@ -12,7 +12,11 @@ def init_game():
                   #Player("Serhio", 1500), Player("Pedro", 1500), Player("Margo", 1500))
 
     while True:
-        table.pre_flop()
+        try:
+            table.pre_flop()
+        except OnePlayerException as exception:
+            print(f"Player {exception.player.name} has won this match with stack {exception.player.stack}")
+            break
         table.ask_players("pre-flop")
     
         table.flop()
