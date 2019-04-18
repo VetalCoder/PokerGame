@@ -147,7 +147,7 @@ class Table:
             if len([player for player in self.players if player.answer.passed != True and self.bank[self.players.index(player)][1] != True]) == 0:
                 return
 
-            if player.answer.passed:
+            if player.answer.passed or self.bank[self.players.index(player)][1]:
                 continue
 
             self.print_info(round)
@@ -361,14 +361,8 @@ class Table:
             for index, winner in enumerate(winners_list, 1):
                 print(f'{index}. Player {winner.name} win with {winner.combination}')
 
-        # kick players with zero stack
-        for index, player in enumerate(self.players):
-            if player.stack <= 0:
-                del self.players[index]
-                # bank must be refreshed after changing count of players
-                self.bank = {index : [0, False] for index in range(len(self.players))} 
-                print()
-                print(f"Player {player.name} has been removed from table... His stack is zero!")
+        # kick players with zero stack, if thoose 
+        self.players = list(filter(lambda item: item.stack > 0, self.players))
 
 
         input("Press enter to continue.....")
@@ -376,6 +370,7 @@ class Table:
     def reset_table(self):
         self.table_cards = []
         self.deck = Deck()
+        self.bank = {index : [0, False] for index in range(len(self.players))} 
 
         for player in self.players:
             player.answer.reset()
