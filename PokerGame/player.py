@@ -474,11 +474,6 @@ class Player:
         
         answer = tb.get_char()
 
-
-        # check answer
-        #try:
-        #    self.do_raise(table, int(answer))
-        #except ValueError:
         if answer == b"p":
             self.do_pass(table)
         elif answer == b"c":

@@ -62,36 +62,8 @@ class Table:
 
         # 1-answer, 2-player stack, 3-all-in?
         self.bank = {index : [0, False] for index in range(len(self.players))}             
-        
-
-        #self.answers = [player.answer for player in self.players]  # some fucks...   {player : player.answer for player in self.players}
-
-    ## True if player must be asked, False - if not.
-    #def check_answer(self, player):
-    #    if player.answer.passed:
-    #        return False
-        
-    #    if not player.answer.asked:
-    #        return True
-
-    #    raising_values = [value.raised for value in self.answers.values()]
-
-    #    # if all elements are equal -- len(set(...)) == 1
-    #    if len(set(raising_values)) == 1:
-    #        return False
-        
-    #    if max(raising_values) == player.answer.raised:
-    #        return False
-    #    else:
-    #        return True
-
-    ## true -- if all players get answer
-    #def check_all_answers(self):
-    #    for player in self.answers:
-    #        if self.check_answer(player):
-    #            return False
-    #    return True
-
+    
+     
     def pre_flop(self):
         # check len players
         if len(self.players) == 1:
@@ -190,8 +162,6 @@ class Table:
         players_list = [player for player in self.players if player.answer.passed != True and \
             self.bank[self.players.index(player)][1] != True and \
             player.bet != max(stack_list)]
-        #if len([player for player in self.players if player.answer.passed != True and self.bank[self.players.index(player)][1] != True]) <= 1:
-        #    return
 
         while len(players_list) > 0:
 
@@ -236,63 +206,6 @@ class Table:
         for player in self.players:
             player.answer.reset()
 
-
-    #def ask_players(self, round):
-    #    while not self.check_all_answers():
-    #        for player in self.players:
-    #            if not self.check_answer(player):
-    #                continue
-                
-    #            clear_scr()
-
-    #            #print info
-    #            print(f"           {round.upper()}")
-    #            print("  Table cards:  ")
-    #            for card in self.table_cards:
-    #                print(f"        {card.short_name}", end="")
-    #            print()
-    #            print(f"  Table bank:    {self.bank}")
-    #            print()
-    #            print("  Players answers:  ")
-    #            for ans in self.players:
-    #                print(f"    {ans.name} -- {ans.answer}")
-    #            print()
-            
-    #            ready = False
-    #            while not ready:
-    #                print(f"{player.name}, press 'Enter' to continue....")
-    #                ready = True if get_char() == b"\r" else False
-
-    #            print("  Your cards:  ")
-    #            for card in player.cards:
-    #                print(f"        {card.short_name}", end="")
-    #            print()
-    #            print(f"  Your stack:    {player.stack}")
-    #            correct_answer = False
-    #            while not correct_answer:
-    #                try:
-    #                    player.ask(self)
-    #                except IncorrectInputException as error:
-    #                    print(error)
-    #                    print("Try again!")
-    #                else:
-    #                    correct_answer = True
-    #    else:
-    #        for player in self.players:
-    #            player.answer.reset()
-    #        self.answers = {player : player.answer for player in self.players}
-
-
-    # check winner
-    #def __check_winner(self):      
-    #    for player in self.players:
-    #        player.find_combination(self.table_cards + player.cards)
-
-    #    return Combination.find_max(self)
-
-    #def __pay_winners(self, winners):
-    #    # TODO: self.bank must be added to winner.stack
-    #    pass
         
     def show_winner(self):
         # find winners and pay them
@@ -303,12 +216,8 @@ class Table:
         for bank in self.bank.values():
             bank_sum += bank[0]
 
-        #players_alive = {index : player for index, player in enumerate(self.players) if player.answer.passed != True}
         players_alive = [player for player in self.players if player.answer.passed != True]
-        # find maximum value betting
-        # max_bet = self.bank[max(players_alive, key=lambda x: self.bank[x][0])][0]
-
-        
+      
         # calculate combinations
         for player in players_alive:
             player.find_combination(self.table_cards + player.cards)
@@ -386,8 +295,8 @@ class Table:
         # kick players with zero stack, if thoose 
         self.players = list(filter(lambda item: item.stack > 0, self.players))
 
-
         input("Press enter to continue.....")
+
 
     def reset_table(self):
         self.table_cards = []
