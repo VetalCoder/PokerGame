@@ -153,10 +153,10 @@ class Table:
     def ask_players(self, round):
         # first cycle (ask all players)
         # return if one player must be asked
-        for player in self.players:
-            if len([player for player in self.players if player.answer.passed != True and self.bank[self.players.index(player)][1] != True]) == 0:
+        if len([player for player in self.players if player.answer.passed != True and self.bank[self.players.index(player)][1] != True]) <= 1:
                 return
 
+        for player in self.players:
             if player.answer.passed or self.bank[self.players.index(player)][1]:
                 continue
 
@@ -185,9 +185,16 @@ class Table:
                     correct_answer = True
         
         # second cycle (ask players to call if len(set(bank_sum)) != 1) 
-        stack_list = [bank[0] for index, bank in self.bank.items() if bank[1] == False and self.players[index].answer.passed != True]
+        stack_list = [bank[0] for index, bank in self.bank.items() if self.players[index].answer.passed != True]
         
-        while len(set(stack_list)) not in (0, 1):
+        players_list = [player for player in self.players if player.answer.passed != True and \
+            self.bank[self.players.index(player)][1] != True and \
+            player.bet != max(stack_list)]
+        #if len([player for player in self.players if player.answer.passed != True and self.bank[self.players.index(player)][1] != True]) <= 1:
+        #    return
+
+        while len(players_list) > 0:
+
             for player in self.players:
                 # skip asking players with max bet, or passed, or who go all-in
                 if player.answer.passed or \
@@ -218,7 +225,12 @@ class Table:
                     else:
                         correct_answer = True
 
-            stack_list = [bank[0] for index, bank in self.bank.items() if bank[1] == False and self.players[index].answer.passed != True]
+            #stack_list = [bank[0] for index, bank in self.bank.items() if bank[1] == False and self.players[index].answer.passed != True]
+            stack_list = [bank[0] for index, bank in self.bank.items() if self.players[index].answer.passed != True]
+        
+            players_list = [player for player in self.players if player.answer.passed != True and \
+                self.bank[self.players.index(player)][1] != True and \
+                player.bet != max(stack_list)]
 
         # reset answers for next row
         for player in self.players:
