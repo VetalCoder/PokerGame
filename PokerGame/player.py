@@ -111,6 +111,15 @@ class IncorrectInputException(Exception):
 
     
 class Combination:
+    """
+        Class, that represents combination for players.
+        Has attributes:
+         - combination :int
+         - card : Card (or list of Cards)
+         - kicker
+         - chain
+    """
+
     COMBINATIONS = {
         1 : "High Card",
         2 : "Pair",
@@ -206,7 +215,6 @@ class Combination:
             return True
         else:
             return False
-
 
 
     # function, which find player with max combination. Returns list of
@@ -412,7 +420,6 @@ class Player:
     def do_check(self, table):
         self.answer.checked = True
         self.answer.asked = True
-        #table.answers[self] = self.answer
         
         # check call (and do call)
         stack_list = [bank[0] for bank in table.bank.values()]
@@ -435,11 +442,9 @@ class Player:
                 self.stack -= difference
 
 
-
     def do_pass(self, table):
         self.answer.passed = True
         self.answer.asked = True
-        #table.bank[table.players.index(self)][0] = self.answer
 
 
     def do_raise(self, table, value=0, all_in=False, sb=False, bb=False):
@@ -469,6 +474,7 @@ class Player:
         else:
             raise IncorrectInputException("This value are incorrect for betting....")
 
+
     def ask(self, table):
         print("Your move!\nYou can press 'p' for pass, 'c' for check (call), 'b' for bet or 'a' for all-in: ")
         
@@ -492,8 +498,6 @@ class Player:
 
     # function, thats find the best combination and write this to Player.combination attribute
     # cards -- 7 cards, sum table cards (5) + player cards (2)
-    
-
     def find_combination(self, cards):
         # sorting cards.... 
         cards.sort(key=lambda x: x.value)
@@ -565,10 +569,19 @@ class Player:
 
 
 class PlayerNet(Player):
+    """
+        Class, that represents Player via network. Inherits Player
+        Has next attributes:
+         - address
+         - socket
+
+        Redefines __init__ and ask funktions, to working via local network
+    """
     def __init__(self, name, stack, address, socket):
         super().__init__(name, stack)
         self.address = address
         self.socket = socket
+
 
     def ask(self, table):
         table.send_data_to_player(self, "Your move!\nYou can press 'p' for pass, 'c' for check (call), 'b' for bet or 'a' for all-in: ", ask_ch=True)

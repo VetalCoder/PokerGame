@@ -52,7 +52,10 @@ class Table:
        Has attributes:
        - [] : current players
        - [] : table cards
-       - current bank
+       - {} : current bank
+       - deck
+       - small blind
+       - index player with small blind
     """
 
     def __init__(self, smallblind, *players):
@@ -62,7 +65,7 @@ class Table:
         self.current_smallblind_player = 0 # index player
         self.smallblind = smallblind
 
-        # 1-answer, 2-player stack, 3-all-in?
+        # index player : 1-bet_value, 2-all-in
         self.bank = {index : [0, False] for index in range(len(self.players))}             
     
      
@@ -312,18 +315,10 @@ class Table:
 
 
 class TableNet(Table):
-
-    def send_data_to_all(self, message, ask_ch=False, ask=False, clear=False):
-        data = {
-            'clear' : clear,
-            'ask_ch' : ask_ch,
-            'ask' : ask,
-            'message' : message,
-            }
-
-        for player in self.players:
-            player.socket.send(json.dumps(data).encode())
-            sleep(0.1) # fucking shit, but works
+    """
+        Class, that provides working with table. Inherits class Table. 
+        Contains some override functions and functions, which can communicate with players
+    """
 
     @staticmethod
     def send_data_to_player(player, message, ask_ch=False, ask=False, clear=False):
@@ -334,7 +329,7 @@ class TableNet(Table):
             'message' : message,
             }
         player.socket.send(json.dumps(data).encode())
-        sleep(0.1) # fucking shit, but works
+        sleep(0.05) # fucking shit, but works
 
     @staticmethod
     def receive_data(player):
@@ -351,21 +346,7 @@ class TableNet(Table):
                 continue
 
             self.print_info(round)
-            
-            #ready = False
-            #while not ready:
-            #    self.send_data_to_player(player, f"{player.name}, press 'Enter' to continue....", ask_ch=True)
-            #    ready = True if self.receive_data(player) == "\r" else False
-
-            ## output private information
-            #message = "  Your move, {player.name}!:  \n"
-            #message += "  Your cards:  \n"
-            #for card in player.cards:
-            #    message += f"        {card.short_name}"
-            #message += "\n"
-            #message += f"  Your stack:    {player.stack}\n"
-            #self.send_data_to_player(player, message)
-            
+                        
             correct_answer = False
             while not correct_answer:
                 try:
@@ -394,18 +375,6 @@ class TableNet(Table):
 
                 self.print_info(round)
             
-                #ready = False
-                #while not ready:
-                #    self.send_data(f"{player.name}, press 'Enter' to continue....")
-                #    ready = True if get_char() == b"\r" else False
-
-                # output private information
-                #print("  Your cards:  ")
-                #for card in player.cards:
-                #    print(f"        {card.short_name}", end="")
-                #print()
-                #print(f"  Your stack:    {player.stack}")
-
                 correct_answer = False
                 while not correct_answer:
                     try:
@@ -416,7 +385,6 @@ class TableNet(Table):
                     else:
                         correct_answer = True
 
-            #stack_list = [bank[0] for index, bank in self.bank.items() if bank[1] == False and self.players[index].answer.passed != True]
             stack_list = [bank[0] for index, bank in self.bank.items() if self.players[index].answer.passed != True]
         
             players_list = [player for player in self.players if player.answer.passed != True and \
@@ -459,8 +427,6 @@ class TableNet(Table):
 
             self.send_data_to_player(player, message + message_p, clear=True)
             
-        #self.send_data_to_all(message, clear=True)
-
 
     def show_winner(self):
         # find winners and pay them
@@ -543,6 +509,10 @@ class TableNet(Table):
             for index, winner in enumerate(winners_list, 1):
                 message += f'{index}. Player {winner.name} win with {winner.combination}\n'
 
+        # inform loosers...
+        for player in self.players:
+            if player.stack <= 0:
+                self.send_data_to_player(player, "You lose! \n     :(", clear=True)
         # kick players with zero stack, if thoose 
         self.players = list(filter(lambda item: item.stack > 0, self.players))
 

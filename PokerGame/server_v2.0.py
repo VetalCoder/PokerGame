@@ -1,9 +1,14 @@
-import socket               # Импорт модуля socket
+"""
+    Server program. Here contains main logic to control users and game.
+"""
+
+import socket
 import json
 from table import TableNet, OnePlayerException
 from player import PlayerNet
 
 
+# function, that read basic settings for game
 def setup_server():
     print("   HELLO!!!   Welcome to PokerGame Server!")
 
@@ -23,6 +28,7 @@ def setup_server():
                 return number_of_players, blind
 
 
+# game lobby. Here we wait for connections... Returns list of connected players
 def start(count_players, blind):
     s = socket.socket()         # Создание object socket
     host = socket.gethostbyname(socket.gethostname()) # Получить имя компьютера 
@@ -59,6 +65,7 @@ def start(count_players, blind):
             return list_connected_players, blind
 
 
+# main function, where create table and do playing....
 def game(player_lst, blind):
     table = TableNet(blind, *player_lst)
     
@@ -66,8 +73,10 @@ def game(player_lst, blind):
         try:
             table.pre_flop()
         except OnePlayerException as exception:
-            print(f"Player {exception.player.name} has won this match with stack {exception.player.stack}")
+            table.send_data_to_player(exception.player, \
+                f"You win this match with stack {exception.player.stack}. Congratulations!", clear=True)
             break
+
         table.ask_players("pre-flop")
     
         table.flop()
@@ -81,6 +90,7 @@ def game(player_lst, blind):
     
         table.show_winner()
         table.reset_table()
+
 
 if __name__ == "__main__":
     game(*start(*setup_server()))

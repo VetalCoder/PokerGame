@@ -39,6 +39,7 @@ def get_char():
 
     return get_char._func()
 
+# next functions for input initial data
 def inp_name():
     return input("Enter your nickname: ")
 
@@ -48,14 +49,17 @@ def inp_stack():
 def inp_ip():
     return input("Please enter server ip-address (ex. '127.0.0.1'): ")
 
+
+# main function, that connect to server and transfer data
 def init_game():
+    clear_scr()
     print("   Welcome to PokerGame Client!!!   ")
     name = inp_name()
-    stack = 25000 # inp_stack()
+    stack = inp_stack()
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     while True:
-        ip = "192.168.1.42" # inp_ip()
+        ip = inp_ip()
         try:
             sock.connect((ip, 27030))
         except BaseException as error:
@@ -94,8 +98,5 @@ def init_game():
         else:
             print(resp['message'])
 
-def main():
+if __name__ == "__main__":
     init_game()
-
-
-main()
