@@ -24,6 +24,9 @@
     <Compile Include="card.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="client.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="deck.py">
       <SubType>Code</SubType>
     </Compile>
@@ -31,6 +34,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="PokerGame.py" />
+    <Compile Include="server_v2.0.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="table.py">
       <SubType>Code</SubType>
     </Compile>

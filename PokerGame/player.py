@@ -564,3 +564,29 @@ class Player:
             return
 
 
+class PlayerNet(Player):
+    def __init__(self, name, stack, address, socket):
+        super().__init__(name, stack)
+        self.address = address
+        self.socket = socket
+
+    def ask(self, table):
+        table.send_data_to_player(self, "Your move!\nYou can press 'p' for pass, 'c' for check (call), 'b' for bet or 'a' for all-in: ", ask_ch=True)
+        
+        answer = table.receive_data(self)
+
+        if answer == "p":
+            self.do_pass(table)
+        elif answer == "c":
+            self.do_check(table)
+        elif answer == "a":
+            self.do_raise(table, all_in=True)
+        elif answer == 'b':
+            table.send_data_to_player(self, "Enter value for bet: ", ask=True)
+            bet_value = table.receive_data(self)
+            try:
+                self.do_raise(table, int(bet_value))
+            except ValueError:
+                raise IncorrectInputException("Incorrect value for bet...")
+        else:
+            raise IncorrectInputException("Incorrect input value...")
